@@ -40,44 +40,59 @@ def get_title_and_hashtags(filename):
 
 def generate_schedule_time_next_day(total_videos, videos_per_day, daily_times=None, timestamps=False, start_days=0):
     """
-    Generate a schedule for video uploads, starting from the next day.
+    生成从次日开始的视频上传计划。
 
-    Args:
-    - total_videos: Total number of videos to be uploaded.
-    - videos_per_day: Number of videos to be uploaded each day.
-    - daily_times: Optional list of specific times of the day to publish the videos.
-    - timestamps: Boolean to decide whether to return timestamps or datetime objects.
-    - start_days: Start from after start_days.
+    参数:
+    total_videos: int
+        需要上传的视频总数。
+    videos_per_day: int
+        每天上传的视频数量。
+    daily_times: list, 可选
+        每日上传视频的具体时间点（24小时制）。如未提供，将使用默认时间列表。
+    timestamps: bool, 可选
+        是否以Unix时间戳形式返回计划时间，默认为False，返回datetime对象。
+    start_days: int, 可选
+        从次日开始上传视频前等待的天数，默认为0，即从次日开始。
 
-    Returns:
-    - A list of scheduling times for the videos, either as timestamps or datetime objects.
+    返回:
+    list
+        所有视频的上传安排时间列表。
     """
-    if videos_per_day <= 0:
-        raise ValueError("videos_per_day should be a positive integer")
 
+    # 检查videos_per_day是否为正整数
+    if videos_per_day <= 0:
+        raise ValueError("videos_per_day 应为正整数")
+
+    # 如未指定每日发布时间，则使用默认时间列表
     if daily_times is None:
-        # Default times to publish videos if not provided
         daily_times = [6, 11, 14, 16, 22]
 
+    # 确保每天上传的视频数量不超过daily_times长度
     if videos_per_day > len(daily_times):
-        raise ValueError("videos_per_day should not exceed the length of daily_times")
+        raise ValueError("videos_per_day 不应超过daily_times的长度")
 
-    # Generate timestamps
+    # 初始化计划时间列表
     schedule = []
     current_time = datetime.now()
 
+    # 为每部视频计算并添加上传时间到计划列表中
     for video in range(total_videos):
-        day = video // videos_per_day + start_days + 1  # +1 to start from the next day
+        day = video // videos_per_day + start_days + 1  # 从次日开始
         daily_video_index = video % videos_per_day
 
-        # Calculate the time for the current video
+        # 计算当前视频的发布时间
         hour = daily_times[daily_video_index]
-        time_offset = timedelta(days=day, hours=hour - current_time.hour, minutes=-current_time.minute,
-                                seconds=-current_time.second, microseconds=-current_time.microsecond)
+        time_offset = timedelta(days=day, hours=hour - current_time.hour,
+                                minutes=-current_time.minute, seconds=-current_time.second,
+                                microseconds=-current_time.microsecond)
         timestamp = current_time + time_offset
 
         schedule.append(timestamp)
 
+    # 根据需求转换时间格式为Unix时间戳
     if timestamps:
         schedule = [int(time.timestamp()) for time in schedule]
+
+    # 返回视频上传时间计划列表
     return schedule
+
